@@ -1,0 +1,5 @@
+requests
+requests_cache
+alpha-vantage
+numpy
+matplotlib
