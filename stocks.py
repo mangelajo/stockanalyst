@@ -37,7 +37,13 @@ class Stock(object):
         return response.json()
 
     def __str__(self):
-        return "%s\t%s\t%.2f\t%.2f" % (self.symbol, self.website, self.PE, self.fPE)
+        return "%s\t%s\t%.2f\t%.2f" % (self.symbol, self.website,
+                                       self.PE or -1.0,
+                                       self.fPE or -1.0)
+
+    def find(self, key):
+        d = {'details': self._details, 'financials': self._financials}
+        return find_paths(d, key)
 
     def find_detail(self, name):
         return find_key(self._details, name)
@@ -47,35 +53,42 @@ class Stock(object):
 
     @property
     def beta(self):
-        return self.find_detail('beta')
+        return self.details.defaultKeyStatistics.beta
+
+    def beta3Year(self):
+        return self.details.defaultKeyStatistics.beta3Year
 
     @property
     def sector(self):
-        return self.find_detail('sector')
+        return self.details.summaryProfile.sector
 
     @property
     def industry(self):
-        return self.find_detail('industry')
+        return self.details.summaryProfile.industry
 
     @property
     def website(self):
-        return self.find_detail('website')
+        return self.details.summaryProfile.website
 
     @property
     def PE(self):
-        return self.find_detail('trailingPE') or -1.0
+        return self.details.summaryDetail.trailingPE
 
     @property
     def fPE(self):
-        return self.find_detail('forwardPE') or -1.0
+        return self.details.summaryDetail.forwardPE
 
     @property
     def dividendYield(self):
-        return self.find_detail('dividendYield')
+        return self.details.summaryDetail.dividendYield
 
     @property
     def price(self):
         return self.details.price.regularMarketOpen
+
+    @property
+    def yearlyEarnings(self):
+        return self.details.earnings.financialsChart.yearly
 
 def find_key(dictionary, key, path=''):
     if key in dictionary:
@@ -90,6 +103,25 @@ def find_key(dictionary, key, path=''):
             res = find_key(sub_item, key, path + '/' + k)
             if res:
                 return res
+
+
+def find_paths(this, keyPart, path=''):
+    found = []
+    if isinstance(this, dict):
+        for k, v in this.items():
+            if path == '':
+                k_path = k
+            else:
+                k_path = path + '.' + k
+            if keyPart in k:
+                print(k_path)
+                found.append(k_path)
+            if isinstance(v, dict):
+                found.extend(find_paths(v, keyPart, k_path))
+    elif isinstance(this, list):
+        for i in this:
+            found.extend(find_paths(i, keyPart, path))
+    return found
 
 
 def _final_value(val):

@@ -13,5 +13,5 @@ for holding in etf.components[:200]:
     stocks.append(stock)
 
 res = graphs.plot_divYield_PE(stocks)
-res.savefig('divYield_PE.png', dpi=600)
+res.savefig('divYield_PE.png', dpi=1000)
 res.show()
